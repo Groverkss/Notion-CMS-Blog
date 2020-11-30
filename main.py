@@ -64,19 +64,27 @@ def build_page(page_block):
 
     task_id = launch_page_export(page_id)
 
-    try:
-        while True:
-            task_status = get_task_status(task_id)
-            if task_status["status"]["type"] == "complete":
-                break
-            print(f"...Export still in progress, waiting for {STATUS_WAIT_TIME} seconds")
-            sleep(STATUS_WAIT_TIME)
-        print("Export task is finished")
-    except:
-        print(f"Problem downloading {title}")
+    done = 0
+    while done < 3:
+        try:
+            while True:
+                task_status = get_task_status(task_id)
+                if task_status["status"]["type"] == "complete":
+                    break
+                print(f"...Export still in progress, waiting for {STATUS_WAIT_TIME} seconds")
+                sleep(STATUS_WAIT_TIME)
+            print("Export task is finished")
+            export_link = task_status["status"]["exportURL"]
+            done = 5
+        except:
+            print(f"Problem downloading {title} on Trial {done + 1}")
+            done += 1
+
+    if done == 5:
+        print(f"Failed all trails of downloading {title}")
+        return
 
 
-    export_link = task_status["status"]["exportURL"]
     print(f"Downloading zip for {title}")
 
     output_dir_path = Path("exports/")
