@@ -73,7 +73,7 @@ def build_page(page_block):
     print("Export task is finished")
 
     export_link = task_status["status"]["exportURL"]
-    print(f"Downloading zip export from {export_link}")
+    print(f"Downloading zip for {title}")
 
     output_dir_path = Path("exports/")
     export_file_name = f'{page_id}.zip'
