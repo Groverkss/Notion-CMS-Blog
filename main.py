@@ -10,6 +10,7 @@ from time import sleep
 STATUS_WAIT_TIME = 5
 BLOCK_SIZE = 1024
 N_TRAILS = 5
+FAIL_SLEEP_TIME = 1
 
 token = environ.get("TOKEN_V2")
 client = NotionClient(token_v2=token)
@@ -72,7 +73,9 @@ def build_page(page_block):
                 task_status = get_task_status(task_id)
                 if task_status["status"]["type"] == "complete":
                     break
-                print(f"...Export still in progress, waiting for {STATUS_WAIT_TIME} seconds")
+                print(
+                    f"...Export still in progress, waiting for {STATUS_WAIT_TIME} seconds"
+                )
                 sleep(STATUS_WAIT_TIME)
             print("Export task is finished")
             export_link = task_status["status"]["exportURL"]
@@ -80,11 +83,15 @@ def build_page(page_block):
         except:
             print(f"Problem downloading {title} on Trial {done + 1}")
             done += 1
+            if done < N_TRAILS:
+                print(
+                    f"Sleeping for {FAIL_SLEEP_TIME} seconds to prevent rate limiting"
+                )
+                sleep(FAIL_SLEEP_TIME)
 
     if done == N_TRAILS:
         print(f"Failed all trails of downloading {title}")
         return
-
 
     print(f"Downloading zip for {title}")
 
