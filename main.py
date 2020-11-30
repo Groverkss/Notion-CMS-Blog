@@ -80,7 +80,7 @@ def build_page(page_block):
             print(f"Problem downloading {title} on Trial {done + 1}")
             done += 1
 
-    if done == 5:
+    if done == 4:
         print(f"Failed all trails of downloading {title}")
         return
 
