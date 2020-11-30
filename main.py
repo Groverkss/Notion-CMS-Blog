@@ -9,6 +9,7 @@ from time import sleep
 
 STATUS_WAIT_TIME = 5
 BLOCK_SIZE = 1024
+N_TRAILS = 5
 
 token = environ.get("TOKEN_V2")
 client = NotionClient(token_v2=token)
@@ -65,7 +66,7 @@ def build_page(page_block):
     task_id = launch_page_export(page_id)
 
     done = 0
-    while done < 3:
+    while done < N_TRAILS:
         try:
             while True:
                 task_status = get_task_status(task_id)
@@ -75,12 +76,12 @@ def build_page(page_block):
                 sleep(STATUS_WAIT_TIME)
             print("Export task is finished")
             export_link = task_status["status"]["exportURL"]
-            done = 5
+            done = N_TRAILS + 1
         except:
             print(f"Problem downloading {title} on Trial {done + 1}")
             done += 1
 
-    if done == 4:
+    if done == N_TRAILS:
         print(f"Failed all trails of downloading {title}")
         return
 
