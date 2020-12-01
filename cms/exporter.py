@@ -52,7 +52,9 @@ class Exporter:
     def clean_pages(self, path):
         """Takes a Path class and removes all non hidden files and dirs from it"""
         for entry in path.iterdir():
-            if entry.is_file():
+            if entry.name.startswith("."):
+                continue
+            elif entry.is_file():
                 entry.unlink()
             else:
                 self.clean_pages(path / entry.name)
@@ -62,7 +64,11 @@ class Exporter:
         """Deletes all non hidden files of a folder which are not present in
         preserve"""
         for entry in path.iterdir():
-            if entry.is_file() and entry not in preserve:
+            if (
+                entry.is_file()
+                and entry not in preserve
+                and not entry.name.startswith(".")
+            ):
                 entry.unlink()
 
     def download_page(self, page_id, title, output_dir_path):
