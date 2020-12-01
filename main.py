@@ -1,100 +1,117 @@
 import notion
-import json
+from zipfile import ZipFile
 from notion.client import NotionClient
 from os import environ
 from pathlib import Path
-from time import sleep
 from cms.exporter import Exporter
 from pprint import pprint
 
-STATUS_WAIT_TIME = 5
-N_TRAILS = 5
-FAIL_SLEEP_TIME = 1
-
 token = environ.get("TOKEN_V2")
 client = NotionClient(token_v2=token)
+
 exporter = Exporter(client)
+new_exports = []
 
 
 def get_block(block_id):
+    """Gets a notion block"""
     collection_block = client.get_block(block_id, force_refresh=True)
     return collection_block
 
 
 def build_page(page_block):
+    """Exports a page from notion. Does not export the page if
+    the page is already available in exports. Returns a Path class
+    for the corresponding htmk file"""
+
     title = page_block.title
     page_id = page_block.id
 
     page_info = page_block.get(force_refresh=True)
-    last_edited_time = page_info['last_edited_time']
+    last_edited_time = page_info["last_edited_time"]
 
-    output_dir_path = Path("exports/") 
+    output_dir_path = Path("exports/")
     export_file_name = f"{page_id}|{last_edited_time}.zip"
     output_dir_path /= export_file_name
 
     if output_dir_path.is_file():
         print(f"No changes in {title}")
-        return
+    else:
+        print(f"Downloading {title}")
+        output_dir_path = exporter.download_page(page_id, title, output_dir_path)
 
-    task_id = exporter.launch_page_export(page_id)
+    if output_dir_path is None:
+        return None
+    new_exports.append(output_dir_path)
 
-    done = 0
-    while done < N_TRAILS:
-        try:
-            while True:
-                task_status = exporter.get_task_status(task_id)
-                if task_status["status"]["type"] == "complete":
-                    break
-                print(
-                    f"...Export still in progress, waiting for {STATUS_WAIT_TIME} seconds"
-                )
-                sleep(STATUS_WAIT_TIME)
-            print("Export task is finished")
-            export_link = task_status["status"]["exportURL"]
-            done = N_TRAILS + 1
-        except:
-            print(f"Problem downloading {title} on Trial {done + 1}")
-            done += 1
-            if done < N_TRAILS:
-                print(
-                    f"Sleeping for {FAIL_SLEEP_TIME} seconds to prevent rate limiting"
-                )
-                sleep(FAIL_SLEEP_TIME)
-
-    if done == N_TRAILS:
-        print(f"Failed all trails of downloading {title}")
-        return
-
-    print(f"Downloading zip for {title}")
-
-
-    exporter.download_file(export_link, output_dir_path)
+    outpath = Path("pages/")
+    with ZipFile(output_dir_path, "r") as zip_ref:
+        print(f"Unziping {title}")
+        zip_ref.extractall(outpath)
+        zip_files = zip_ref.infolist()
+    # Get HTML file name from zip
+    zip_files = [
+        zip_file.filename
+        for zip_file in zip_files
+        if zip_file.filename.endswith(".html")
+    ]
+    return outpath / zip_files[0], title
 
 
 def build_collection(collection_block):
+    """Traverses through a collection and builds its pages."""
     collection = collection_block.collection
 
+    pages = []
     for row in collection.get_rows():
-        build_page(row)
+        pages.append(build_page(row))
+    pages = [page for page in pages if page is not None]
+    print(pages)
+
+    # Return collection page path,title
+
+
+def build_solopage(page_block):
+    """Builds a single page"""
+    page = build_page(page_block)
+    print(page)
+
+    # Return solopage path, title
 
 
 def build_space(space_id):
+    """Traverses through a space and builds all collections and pages"""
     workspace = client.get_space(space_id, force_refresh=True)
     page_ids = workspace.get(force_refresh=True)["pages"]
 
+    pages = []
     for page_id in page_ids:
         page_block = get_block(page_id)
         if page_block is None:
             continue
         if page_block.type == "page":
-            build_page(page_block)
+            pages.append(build_solopage(page_block))
         else:
-            build_collection(page_block)
+            pages.append(build_collection(page_block))
+
+    # Build main page
 
 
 def main():
+    # Clean old pages
+    print("Cleaning old pages")
+    pages_path = Path("pages/")
+    exporter.clean_pages(pages_path)
+
+    # Build new pages
+    print("Building Space")
     space_id = environ.get("SPACE_ID")
     build_space(space_id)
+
+    # Clean redundent zips
+    print("Removing Redundent Zips")
+    export_path = Path("exports/")
+    exporter.clean_exports(export_path, new_exports)
 
 
 if __name__ == "__main__":

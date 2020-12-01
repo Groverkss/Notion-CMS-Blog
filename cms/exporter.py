@@ -1,7 +1,11 @@
 import requests
 from tqdm import tqdm
+from time import sleep
 
 BLOCK_SIZE = 1024
+STATUS_WAIT_TIME = 3
+N_TRAILS = 5
+FAIL_SLEEP_TIME = 1
 
 
 class Exporter:
@@ -42,6 +46,56 @@ class Exporter:
                 },
             }
         }
-
         response = self.client.post("enqueueTask", data)
         return response.json()["taskId"]
+
+    def clean_pages(self, path):
+        """Takes a Path class and removes all non hidden files and dirs from it"""
+        for entry in path.iterdir():
+            if entry.is_file():
+                entry.unlink()
+            else:
+                self.clean_pages(path / entry.name)
+                entry.rmdir()
+
+    def clean_exports(self, path, preserve):
+        """Deletes all non hidden files of a folder which are not present in
+        preserve"""
+        for entry in path.iterdir():
+            if entry.is_file() and entry not in preserve:
+                entry.unlink()
+
+    def download_page(self, page_id, title, output_dir_path):
+        """Downloads a page with id: page_id, title: title and zipfile path:
+        output_dir_path"""
+        task_id = self.launch_page_export(page_id)
+        done = 0
+        while done < N_TRAILS:
+            try:
+                while True:
+                    task_status = self.get_task_status(task_id)
+                    if task_status["status"]["type"] == "complete":
+                        break
+                    print(
+                        f"...Export still in progress, waiting for {STATUS_WAIT_TIME} seconds"
+                    )
+                    sleep(STATUS_WAIT_TIME)
+                print("Export task is finished")
+                export_link = task_status["status"]["exportURL"]
+                done = N_TRAILS + 1
+            except:
+                print(f"Problem downloading {title} on Trial {done + 1}")
+                done += 1
+                if done < N_TRAILS:
+                    print(
+                        f"Sleeping for {FAIL_SLEEP_TIME} seconds to prevent rate limiting"
+                    )
+                    sleep(FAIL_SLEEP_TIME)
+
+        if done == N_TRAILS:
+            print(f"Failed all trails of downloading {title}")
+            return None
+
+        print(f"Downloading zip for {title}")
+        self.download_file(export_link, output_dir_path)
+        return output_dir_path
