@@ -5,6 +5,7 @@ from os import environ
 from pathlib import Path
 from time import sleep
 from cms.exporter import Exporter
+from pprint import pprint
 
 STATUS_WAIT_TIME = 5
 N_TRAILS = 5
@@ -23,6 +24,17 @@ def get_block(block_id):
 def build_page(page_block):
     title = page_block.title
     page_id = page_block.id
+
+    page_info = page_block.get(force_refresh=True)
+    last_edited_time = page_info['last_edited_time']
+
+    output_dir_path = Path("exports/") 
+    export_file_name = f"{page_id}|{last_edited_time}.zip"
+    output_dir_path /= export_file_name
+
+    if output_dir_path.is_file():
+        print(f"No changes in {title}")
+        return
 
     task_id = exporter.launch_page_export(page_id)
 
@@ -55,10 +67,8 @@ def build_page(page_block):
 
     print(f"Downloading zip for {title}")
 
-    output_dir_path = Path("exports/")
-    export_file_name = f"{page_id}.zip"
 
-    exporter.download_file(export_link, output_dir_path / export_file_name)
+    exporter.download_file(export_link, output_dir_path)
 
 
 def build_collection(collection_block):

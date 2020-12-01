@@ -3,6 +3,7 @@
 
 # Exports
 /exports/*
+/pages/*
 !*.gitkeep
 
 # Byte-compiled / optimized / DLL files
