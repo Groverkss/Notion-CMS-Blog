@@ -1,58 +1,18 @@
-import requests
 import notion
 import json
 from notion.client import NotionClient
 from os import environ
-from tqdm import tqdm
 from pathlib import Path
 from time import sleep
+from cms.exporter import Exporter
 
 STATUS_WAIT_TIME = 5
-BLOCK_SIZE = 1024
 N_TRAILS = 5
 FAIL_SLEEP_TIME = 1
 
 token = environ.get("TOKEN_V2")
 client = NotionClient(token_v2=token)
-
-
-def get_task_status(task_id):
-    task_statuses = client.post("getTasks", {"taskIds": [task_id]}).json()["results"]
-
-    return list(
-        filter(lambda task_status: task_status["id"] == task_id, task_statuses)
-    )[0]
-
-
-def launch_page_export(block_id):
-    data = {
-        "task": {
-            "eventName": "exportBlock",
-            "request": {
-                "blockId": block_id,
-                "recursive": False,
-                "exportOptions": {
-                    "exportType": "html",
-                    "timeZone": "Asia/Calcutta",
-                    "locale": "en",
-                },
-            },
-        }
-    }
-
-    response = client.post("enqueueTask", data)
-    return response.json()["taskId"]
-
-
-def _download_file(url, export_file):
-    with requests.get(url, stream=True, allow_redirects=True) as response:
-        total_size = int(response.headers.get("content-length", 0))
-        tqdm_bar = tqdm(total=total_size, unit="iB", unit_scale=True)
-        with export_file.open("wb") as export_file_handle:
-            for data in response.iter_content(BLOCK_SIZE):
-                tqdm_bar.update(len(data))
-                export_file_handle.write(data)
-        tqdm_bar.close()
+exporter = Exporter(client)
 
 
 def get_block(block_id):
@@ -64,13 +24,13 @@ def build_page(page_block):
     title = page_block.title
     page_id = page_block.id
 
-    task_id = launch_page_export(page_id)
+    task_id = exporter.launch_page_export(page_id)
 
     done = 0
     while done < N_TRAILS:
         try:
             while True:
-                task_status = get_task_status(task_id)
+                task_status = exporter.get_task_status(task_id)
                 if task_status["status"]["type"] == "complete":
                     break
                 print(
@@ -98,7 +58,7 @@ def build_page(page_block):
     output_dir_path = Path("exports/")
     export_file_name = f"{page_id}.zip"
 
-    _download_file(export_link, output_dir_path / export_file_name)
+    exporter.download_file(export_link, output_dir_path / export_file_name)
 
 
 def build_collection(collection_block):
