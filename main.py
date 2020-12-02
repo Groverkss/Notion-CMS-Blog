@@ -70,10 +70,7 @@ def build_collection(collection_block):
 
     pages = []
     for row in collection.get_rows():
-        if row.type == "page":
-            pages.append(build_page(row))
-        else:
-            pages.append(build_collection(row))
+        pages.append(build_page(row))
     pages = [page for page in pages if page is not None]
 
     # Build collection page
