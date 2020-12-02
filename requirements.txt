@@ -6,6 +6,8 @@ chardet==3.0.4
 commonmark==0.9.1
 dictdiffer==0.8.1
 idna==2.10
+Jinja2==2.11.2
+MarkupSafe==1.1.1
 notion==0.0.27
 python-slugify==4.0.1
 pytz==2020.4
