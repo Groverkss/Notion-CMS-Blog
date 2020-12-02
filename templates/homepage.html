@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<meta charset='UTF-8'>
+<html>
+
+<head>
+    <title> Homepage </title>
+    <style>
+        @font-face {
+            font-family: 'Blog Mono';
+            src: url('templates/iosevka-fixed-extended.ttf');
+        }
+
+        @font-face {
+            font-family: 'Blog Text';
+            src: url('templates/Exo2-Regular.ttf');
+        }
+
+        html {
+            font-size: 100%;
+        }
+
+        html,
+        body {
+            text-size-adjust: none;
+            -webkit-text-size-adjust: none;
+            -moz-text-size-adjust: none;
+            -ms-text-size-adjust: none;
+        }
+
+        body {
+            background-color: #FFFFFF;
+            color: #000000;
+            font-family: 'Blog Text', sans-serif;
+            font-size: 18px;
+            line-height: 1.4em;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        img {
+            display: block;
+            width: 100%;
+            max-width: 800px;
+            height: auto
+        }
+
+        .container {
+            overflow-x: auto;
+            overflow-y: hidden;
+            max-width: 100%;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin-left: 5%;
+                margin-right: 5%;
+            }
+
+            body {
+                font-size: 30px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                margin-left: 5%;
+                margin-right: 5%;
+            }
+
+            body {
+                font-size: 30px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                margin-left: 25%;
+                margin-right: 20%;
+            }
+        }
+
+        .image {}
+
+        a:hover {
+            color: #1a73e8;
+            text-decoration: underline;
+        }
+
+        a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+
+        a:visited {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+
+        a:active {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+
+        blockquote {
+            margin-left: 0px;
+            margin-right: 0px;
+        }
+
+        pre,
+        .latexblock,
+        blockquote {
+            border-left-color: #BBB;
+            border-left-style: solid;
+            border-left-width: 5px;
+        }
+
+        pre,
+        blockquote {
+            padding-left: 10px;
+        }
+
+        pre {
+            font-family: 'Blog Mono', monospace;
+            font-size: 90%;
+        }
+
+        pre {
+            overflow-x: auto;
+        }
+
+        .latexblock,
+        blockquote,
+        pre {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            padding-top: 5px;
+            background-color: #FFFFFF;
+        }
+
+        .latexblock {
+            line-height: 1em
+        }
+
+        pre,
+        kbd,
+        samp,
+        tt {
+            font-family: 'Blog Mono', monospace;
+        }
+
+        ul,
+        ol {
+            list-style-position: inside;
+            padding-left: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class='container'>
+        <h2>
+            <img style="float:left;display:inline-block;padding-right: 16px; width: 40px" src="templates/banner.jpg">
+            Homepage
+        </h2>
+        <h4><span class='centered'> Kunwar Shaanjeet Singh Grover</h4>
+        <ul>
+            <li><span class='centered'> Reach me: <a href='mailto:groverkss@gmail.com'>
+                        <code>groverkss@gmail.com</code></a></li>
+            <li><span class='centered'> <a href=http://github.com/Groverkss><span class='centered'>github</a></li>
+        </ul>
+
+        Currently work in progress!
+
+        <ol>
+            {% for link, title in pages %}
+            <li><a href='{{link}}'><span class='centered'>{{title}}</a></li>
+            {% endfor %}
+        </ol>
+        </container>
+</body>
+
+</html>

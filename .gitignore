@@ -4,6 +4,7 @@
 # Exports
 /exports/*
 /pages/*
+index.html
 !*.gitkeep
 
 # Byte-compiled / optimized / DLL files

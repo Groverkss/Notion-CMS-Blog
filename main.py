@@ -4,6 +4,7 @@ from notion.client import NotionClient
 from os import environ
 from pathlib import Path
 from cms.exporter import Exporter
+from jinja2 import Template
 from pprint import pprint
 
 token = environ.get("TOKEN_V2")
@@ -15,8 +16,8 @@ new_exports = []
 
 def get_block(block_id):
     """Gets a notion block"""
-    collection_block = client.get_block(block_id, force_refresh=True)
-    return collection_block
+    block = client.get_block(block_id, force_refresh=True)
+    return block
 
 
 def build_page(page_block):
@@ -49,6 +50,7 @@ def build_page(page_block):
         print(f"Unziping {title}")
         zip_ref.extractall(outpath)
         zip_files = zip_ref.infolist()
+
     # Get HTML file name from zip
     zip_files = [
         zip_file.filename
@@ -61,22 +63,39 @@ def build_page(page_block):
 def build_collection(collection_block):
     """Traverses through a collection and builds its pages."""
     collection = collection_block.collection
+    collection_info = collection.get(force_refresh=True)
+
+    title = collection_info["name"][0][0]
+    collection_id = collection_info["id"]
 
     pages = []
     for row in collection.get_rows():
-        pages.append(build_page(row))
+        if row.type == "page":
+            pages.append(build_page(row))
+        else:
+            pages.append(build_collection(row))
     pages = [page for page in pages if page is not None]
-    print(pages)
+
+    # Build collection page
+    with open("./templates/collection.html") as home_template:
+        home_contents = home_template.read()
+
+    collect_t = Template(home_contents)
+    collect_t = collect_t.render(title=title, pages=pages)
+
+    outpath = Path(f"pages/{title} {collection_id}.html")
+    outpath.write_text(collect_t)
 
     # Return collection page path,title
+    return outpath, title
 
 
 def build_solopage(page_block):
     """Builds a single page"""
     page = build_page(page_block)
-    print(page)
 
     # Return solopage path, title
+    return page
 
 
 def build_space(space_id):
@@ -95,6 +114,14 @@ def build_space(space_id):
             pages.append(build_collection(page_block))
 
     # Build main page
+    with open("./templates/homepage.html") as home_template:
+        home_contents = home_template.read()
+
+    collect_t = Template(home_contents)
+    collect_t = collect_t.render(pages=pages)
+
+    outpath = Path(f"index.html")
+    outpath.write_text(collect_t)
 
 
 def main():
