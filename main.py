@@ -5,7 +5,6 @@ from os import environ
 from pathlib import Path
 from cms.exporter import Exporter
 from jinja2 import Template
-from pprint import pprint
 
 token = environ.get("TOKEN_V2")
 client = NotionClient(token_v2=token)
