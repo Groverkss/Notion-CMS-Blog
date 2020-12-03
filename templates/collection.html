@@ -163,6 +163,12 @@
             {{title}}
         </h2>
 
+        {% if description is not none %}
+        <h4>
+            {{description}}
+        </h4>
+        {% endif %}
+
         <ol>
             {% for link, title in pages %}
             <li><a href='../{{link}}'><span class='centered'>{{title}}</a></li>

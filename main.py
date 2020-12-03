@@ -64,6 +64,11 @@ def build_collection(collection_block):
     collection = collection_block.collection
     collection_info = collection.get(force_refresh=True)
 
+    try:
+        description = collection_info["description"][0][0]
+    except:
+        description = None
+
     title = collection_info["name"][0][0]
     collection_id = collection_info["id"]
 
@@ -77,7 +82,7 @@ def build_collection(collection_block):
         home_contents = home_template.read()
 
     collect_t = Template(home_contents)
-    collect_t = collect_t.render(title=title, pages=pages)
+    collect_t = collect_t.render(title=title, description=description, pages=pages)
 
     outpath = Path(f"pages/{title} {collection_id}.html")
     outpath.write_text(collect_t)
