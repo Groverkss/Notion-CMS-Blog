@@ -43,6 +43,8 @@ Give execute permissions to this file:
 chmod +700 .secrets
 ```
 
+4. Remove lines 5-7 in `.gitignore`
+
 ## Runnning
 
 After creating the `.secrets` file, run the program as follows:
