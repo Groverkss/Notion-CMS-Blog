@@ -15,7 +15,7 @@ new_exports = []
 
 def get_block(block_id):
     """Gets a notion block"""
-    block = client.get_block(block_id, force_refresh=True)
+    block = client.get_block(block_id)
     return block
 
 
@@ -27,7 +27,7 @@ def build_page(page_block):
     title = page_block.title
     page_id = page_block.id
 
-    page_info = page_block.get(force_refresh=True)
+    page_info = page_block.get()
     last_edited_time = page_info["last_edited_time"]
 
     output_dir_path = Path("exports/")
@@ -62,7 +62,7 @@ def build_page(page_block):
 def build_collection(collection_block):
     """Traverses through a collection and builds its pages."""
     collection = collection_block.collection
-    collection_info = collection.get(force_refresh=True)
+    collection_info = collection.get()
 
     try:
         description = collection_info["description"][0][0]
@@ -101,8 +101,8 @@ def build_solopage(page_block):
 
 def build_space(space_id):
     """Traverses through a space and builds all collections and pages"""
-    workspace = client.get_space(space_id, force_refresh=True)
-    page_ids = workspace.get(force_refresh=True)["pages"]
+    workspace = client.get_space(space_id)
+    page_ids = workspace.get()["pages"]
 
     pages = []
     for page_id in page_ids:
